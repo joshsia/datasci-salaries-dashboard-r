@@ -32,9 +32,9 @@ app$layout(
       htmlDiv("Select a feature to stack by:"),
       dccDropdown(
         id="stack-select",
-        options = list(list(label = "FormalEducation",
+        options = list(list(label = "Formal Education",
                             value = "FormalEducation"),
-                       list(label = "Tenure", value = "Tenure")),
+                       list(label = "Coding Experience", value = "Tenure")),
         value="FormalEducation")
     )
   )
@@ -45,20 +45,20 @@ app$callback(
   list(input('stack-select', 'value')),
   function(stack) {
 
-    p <- data |>
-      drop_na(Salary_USD, Tenure, FormalEducation) |>
-      filter(Tenure != "I don't write code to analyze data") |>
+    p <- data %>%
+      drop_na(Salary_USD, Tenure, FormalEducation) %>%
+      filter(Tenure != "I don't write code to analyze data") %>%
       mutate(
         FormalEducation = case_when(
           !(FormalEducation %in% education_order) ~ "Less than bachelor's degree",
-          TRUE ~ FormalEducation)) |>
+          TRUE ~ FormalEducation)) %>%
       mutate(
         FormalEducation = factor(
           FormalEducation, levels = c(
           "Less than bachelor's degree", education_order)
           ),
         Tenure = factor(Tenure, levels = tenure_order)
-        ) |>
+        ) %>%
       ggplot(aes(x = Salary_USD, fill = !!sym(stack))) +
       geom_histogram(bins = 20, color = "white") +
       scale_x_continuous(labels = scales::label_number_si()) +
@@ -78,4 +78,5 @@ app$callback(
   }
 )
 
-app$run_server(debug = T)
+app$run_server(host = '0.0.0.0')
+# app$run_server(debug = T)
