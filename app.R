@@ -1,7 +1,5 @@
 library(dash)
-library(dashHtmlComponents)
 library(dashBootstrapComponents)
-library(dashCoreComponents)
 library(ggplot2)
 library(plotly)
 library(purrr)
@@ -28,8 +26,18 @@ tenure_order <- c(
 app$layout(
   dbcContainer(
     list(
+      div("Select a country:"),
+      dccDropdown(
+        id='country-select',
+        options = data %>%
+          arrange(Country) %>%
+          pull(Country) %>%
+          unique %>%
+          purrr::map(function(country) list(label = country,
+                                            value = country))
+        ),
       dccGraph(id='stacked-hist'),
-      htmlDiv("Select a feature to stack by:"),
+      div("Select a feature to stack by:"),
       dccDropdown(
         id="stack-select",
         options = list(list(label = "Formal Education",
@@ -42,10 +50,17 @@ app$layout(
 
 app$callback(
   output('stacked-hist', 'figure'),
-  list(input('stack-select', 'value')),
-  function(stack) {
+  list(input('country-select', 'value'), input('stack-select', 'value')),
+  function(country, stack) {
 
-    p <- data %>%
+    if (!is.null(country[[1]])) {
+      p <- data %>%
+        filter(Country == country)
+    }
+    else {
+      p <- data
+    }
+    p <- p %>%
       drop_na(Salary_USD, Tenure, FormalEducation) %>%
       filter(Tenure != "I don't write code to analyze data") %>%
       mutate(
@@ -78,5 +93,5 @@ app$callback(
   }
 )
 
-app$run_server(host = '0.0.0.0')
-# app$run_server(debug = T)
+# app$run_server(host = '0.0.0.0')
+app$run_server(debug = T)
